@@ -1,0 +1,41 @@
+name: CI/CD Pipeline
+
+# Trigger the workflow on push or pull request
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      docker:
+        image: docker:19.03.12
+        options: --privileged
+        ports:
+          - 2375:2375
+        env:
+          DOCKER_TLS_CERTDIR: ""
+        volumes:
+          - /var/run/docker.sock:/var/run/docker.sock
+        options: --privileged
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.6'
+        
+    - name: Install docker-compose
+      run: pip install docker-compose
+
+    - name: Build and run tests
+      run: docker-compose run app sh -c "python manage.py test && flake8"
